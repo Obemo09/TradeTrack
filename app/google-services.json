@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "387809267872",
+    "project_id": "tradetrack-18517",
+    "storage_bucket": "tradetrack-18517.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:387809267872:android:f84c738d85bf80508ab9c5",
+        "android_client_info": {
+          "package_name": "com.example.tradetrack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDF6k3c5JHduSVSYhoTn9uv48MB7unTSGY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
