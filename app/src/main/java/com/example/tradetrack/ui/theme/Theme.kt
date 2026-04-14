@@ -14,26 +14,28 @@ import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
     primary = TradingBlue,
-    onPrimary = TradingBlack,
-    secondary = TradingLightGrey,
+    onPrimary = Color.White,
+    secondary = TradingCyan,
     background = TradingBlack,
     surface = TradingDarkGrey,
     onSurface = TradingTextPrimary,
     surfaceVariant = TradingLightGrey,
     onSurfaceVariant = TradingTextSecondary,
-    outline = TradingLightGrey
+    outline = TradingLightGrey,
+    error = TradingRed
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = TradingBlue,
     onPrimary = Color.White,
-    secondary = Color(0xFFE0E0E0),
-    background = Color(0xFFF8F9FA),
+    secondary = TradingCyan,
+    background = Color(0xFFF1F5F9),
     surface = Color.White,
-    onSurface = Color(0xFF212529),
-    surfaceVariant = Color(0xFFF1F3F5),
-    onSurfaceVariant = Color(0xFF495057),
-    outline = Color(0xFFDEE2E6)
+    onSurface = Color(0xFF1E293B),
+    surfaceVariant = Color(0xFFE2E8F0),
+    onSurfaceVariant = Color(0xFF64748B),
+    outline = Color(0xFFCBD5E1),
+    error = TradingRed
 )
 
 @Composable

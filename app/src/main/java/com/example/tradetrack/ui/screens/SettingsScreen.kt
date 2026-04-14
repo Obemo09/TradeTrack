@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.example.tradetrack.data.Trade
 import com.example.tradetrack.ui.theme.*
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,9 +37,11 @@ fun SettingsScreen(
     onThemeChange: (Boolean) -> Unit,
     onLogout: () -> Unit
 ) {
-    val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
-    val currentUser = auth.currentUser
+    var currentUser by remember { mutableStateOf(auth.currentUser) }
+    
+    var showNameDialog by remember { mutableStateOf(false) }
+    var newName by remember { mutableStateOf(currentUser?.displayName ?: "") }
     
     var notificationsEnabled by remember { mutableStateOf(false) }
     
@@ -79,7 +83,8 @@ fun SettingsScreen(
             // Profile Section
             ProfileHeader(
                 name = currentUser?.displayName ?: "Pro Trader",
-                tradeCount = trades.size
+                tradeCount = trades.size,
+                onClick = { showNameDialog = true }
             )
 
             // Settings Groups
@@ -110,11 +115,6 @@ fun SettingsScreen(
                 )
             }
 
-            SettingsGroup(title = "ACCOUNT") {
-                SettingsClickItem(icon = Icons.Default.Person, title = "Edit Profile")
-                SettingsClickItem(icon = Icons.Default.Security, title = "Privacy & Security")
-            }
-
             SettingsGroup(title = "ABOUT") {
                 SettingsClickItem(icon = Icons.Default.Info, title = "App Version", subtitle = "1.0.0")
                 SettingsClickItem(icon = Icons.Default.Star, title = "Rate TradeTrack")
@@ -130,10 +130,50 @@ fun SettingsScreen(
             }
         }
     }
+
+    if (showNameDialog) {
+        AlertDialog(
+            onDismissRequest = { showNameDialog = false },
+            title = { Text("Edit Profile Name", fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = newName,
+                    onValueChange = { newName = it },
+                    label = { Text("Full Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val user = auth.currentUser
+                        val profileUpdates = UserProfileChangeRequest.Builder()
+                            .setDisplayName(newName)
+                            .build()
+                        user?.updateProfile(profileUpdates)?.addOnCompleteListener {
+                            currentUser = auth.currentUser
+                            showNameDialog = false
+                        }
+                    }
+                ) {
+                    Text("SAVE", color = TradingBlue, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNameDialog = false }) {
+                    Text("CANCEL", color = Color.Gray)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(24.dp)
+        )
+    }
 }
 
 @Composable
-fun ProfileHeader(name: String, tradeCount: Int) {
+fun ProfileHeader(name: String, tradeCount: Int, onClick: () -> Unit) {
     val initial = if (name.isNotBlank()) name.take(1).uppercase() else "T"
     
     Row(
@@ -141,6 +181,7 @@ fun ProfileHeader(name: String, tradeCount: Int) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surface)
+            .clickable(onClick = onClick)
             .padding(20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -154,10 +195,11 @@ fun ProfileHeader(name: String, tradeCount: Int) {
             Text(initial, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 24.sp)
         }
         Spacer(Modifier.width(16.dp))
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(name, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             Text("Pro Trader • $tradeCount Entries", style = MaterialTheme.typography.labelMedium, color = TradingTextSecondary)
         }
+        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = TradingBlue, modifier = Modifier.size(20.dp))
     }
 }
 

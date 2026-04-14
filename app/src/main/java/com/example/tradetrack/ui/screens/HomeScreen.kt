@@ -1,9 +1,9 @@
 package com.example.tradetrack.ui.screens
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,16 +15,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tradetrack.data.Trade
 import com.example.tradetrack.data.TradeResult
-import com.example.tradetrack.data.TradeType
 import com.example.tradetrack.ui.components.ModernTradeItem
 import com.example.tradetrack.ui.components.EmptyState
 import com.example.tradetrack.ui.theme.*
@@ -36,7 +36,9 @@ fun HomeScreen(
     onAddTrade: () -> Unit,
     onTradeClick: (Trade) -> Unit,
     onDeleteTrade: (Trade) -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onWinRateClick: () -> Unit,
+    onTotalTradesClick: () -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -46,38 +48,55 @@ fun HomeScreen(
                     title = {
                         Text(
                             "TRADETRACK",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = 3.sp,
-                            color = TradingBlue
+                            style = TextStyle(
+                                brush = Brush.horizontalGradient(BlueGradient),
+                                fontWeight = FontWeight.Black,
+                                fontSize = 24.sp,
+                                letterSpacing = 2.sp
+                            )
                         )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
+                        containerColor = Color.Transparent,
                         titleContentColor = MaterialTheme.colorScheme.onSurface
                     ),
                     actions = {
-                         IconButton(onClick = onProfileClick) {
-                             Icon(
-                                 imageVector = Icons.Default.AccountCircle,
-                                 contentDescription = "Profile",
-                                 tint = TradingTextSecondary
-                             )
-                         }
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 12.dp)
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { onProfileClick() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Person,
+                                contentDescription = "Profile",
+                                tint = TradingBlue,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 )
-                DashboardSummary(trades)
+                DashboardSummary(
+                    trades = trades,
+                    onWinRateClick = onWinRateClick,
+                    onTotalTradesClick = onTotalTradesClick
+                )
             }
         },
         floatingActionButton = {
-            LargeFloatingActionButton(
+            FloatingActionButton(
                 onClick = onAddTrade,
                 containerColor = TradingBlue,
                 contentColor = Color.White,
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.padding(16.dp)
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .padding(16.dp)
+                    .shadow(12.dp, RoundedCornerShape(16.dp), spotColor = TradingBlue)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "New Trade", modifier = Modifier.size(36.dp))
+                Icon(Icons.Default.Add, contentDescription = "New Trade", modifier = Modifier.size(24.dp))
             }
         }
     ) { padding ->
@@ -85,27 +104,33 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.background)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "TRADING HISTORY",
-                    style = MaterialTheme.typography.labelMedium,
+                    "RECENT ACTIVITY",
+                    style = MaterialTheme.typography.labelLarge,
                     color = TradingTextSecondary,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 1.sp
                 )
-                Text(
-                    "${trades.size} entries",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TradingBlue
-                )
+                Surface(
+                    color = TradingBlue.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        "${trades.size} TRADES",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TradingBlue,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             if (trades.isEmpty()) {
@@ -113,14 +138,20 @@ fun HomeScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 100.dp)
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 100.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(trades, key = { it.id }) { trade ->
-                        ModernTradeItem(
-                            trade = trade,
-                            onClick = { onTradeClick(trade) },
-                            onDelete = { onDeleteTrade(trade) }
-                        )
+                        AnimatedVisibility(
+                            visible = true,
+                            enter = fadeIn() + expandVertically()
+                        ) {
+                            ModernTradeItem(
+                                trade = trade,
+                                onClick = { onTradeClick(trade) },
+                                onDelete = { onDeleteTrade(trade) }
+                            )
+                        }
                     }
                 }
             }
@@ -129,7 +160,11 @@ fun HomeScreen(
 }
 
 @Composable
-fun DashboardSummary(trades: List<Trade>) {
+fun DashboardSummary(
+    trades: List<Trade>,
+    onWinRateClick: () -> Unit,
+    onTotalTradesClick: () -> Unit
+) {
     val winRate = if (trades.isNotEmpty()) {
         (trades.count { it.result == TradeResult.WIN }.toFloat() / trades.size * 100).toInt()
     } else 0
@@ -141,17 +176,19 @@ fun DashboardSummary(trades: List<Trade>) {
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         SummaryCard(
-            label = "Performance",
+            label = "WIN RATE",
             value = "$winRate%",
-            subValue = "Win Rate",
-            gradient = Brush.verticalGradient(listOf(TradingGreen, TradingGreenLight)),
-            modifier = Modifier.weight(1.2f)
+            icon = Icons.Default.AutoGraph,
+            gradient = BlueGradient,
+            onClick = onWinRateClick,
+            modifier = Modifier.weight(1f)
         )
         SummaryCard(
-            label = "Activity",
+            label = "TOTAL TRADES",
             value = trades.size.toString(),
-            subValue = "Total Trades",
-            gradient = Brush.verticalGradient(listOf(TradingBlue, Color(0xFF4785FF))),
+            icon = Icons.Default.StackedLineChart,
+            gradient = listOf(TradingPurple, Color(0xFF9D50BB)),
+            onClick = onTotalTradesClick,
             modifier = Modifier.weight(1f)
         )
     }
@@ -161,40 +198,38 @@ fun DashboardSummary(trades: List<Trade>) {
 fun SummaryCard(
     label: String, 
     value: String, 
-    subValue: String,
-    gradient: Brush, 
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    gradient: List<Color>, 
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.height(110.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = modifier
+            .height(120.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
-        border = BorderStroke(1.dp, TradingLightGrey.copy(alpha = 0.3f))
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(gradient)
-                    .alpha(0.05f)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.linearGradient(gradient))
+                .padding(16.dp)
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.2f),
+                modifier = Modifier.size(64.dp).align(Alignment.BottomEnd).offset(x = 16.dp, y = 16.dp)
             )
-            
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(label, style = MaterialTheme.typography.labelSmall, color = TradingTextSecondary, fontWeight = FontWeight.Bold)
-                Column {
-                    Text(
-                        value, 
-                        style = MaterialTheme.typography.headlineMedium, 
-                        color = MaterialTheme.colorScheme.onSurface, 
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    Text(subValue, style = MaterialTheme.typography.labelSmall, color = TradingTextSecondary)
-                }
+            Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxSize()) {
+                Text(label, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                Text(
+                    value, 
+                    style = MaterialTheme.typography.headlineMedium, 
+                    color = Color.White, 
+                    fontWeight = FontWeight.Black
+                )
             }
         }
     }

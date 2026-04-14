@@ -52,7 +52,9 @@ fun TradeTrackNavGraph(
                     navController.navigate(Screen.TradeDetail.createRoute(trade.id))
                 },
                 onDeleteTrade = { listViewModel.deleteTrade(it) },
-                onProfileClick = { navController.navigate(Screen.Settings.route) }
+                onProfileClick = { navController.navigate(Screen.Settings.route) },
+                onWinRateClick = { navController.navigate(Screen.Analytics.route) },
+                onTotalTradesClick = { navController.navigate(Screen.History.route) }
             )
         }
 

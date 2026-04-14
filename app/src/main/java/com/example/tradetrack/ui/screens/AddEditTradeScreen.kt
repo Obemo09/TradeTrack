@@ -3,9 +3,10 @@ package com.example.tradetrack.ui.screens
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,12 +14,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -32,7 +37,6 @@ import com.example.tradetrack.data.TradeResult
 import com.example.tradetrack.data.TradeType
 import com.example.tradetrack.ui.theme.*
 import com.example.tradetrack.util.ImageHelper
-import com.example.tradetrack.viewmodel.AddEditState
 import com.example.tradetrack.viewmodel.AddEditTradeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,160 +57,216 @@ fun AddEditTradeScreen(
     }
 
     Scaffold(
-        containerColor = TradingBlack,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { 
                     Text(
-                        if (viewModel.isEditMode) "EDIT ENTRY" else "NEW ENTRY",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 2.sp
+                        if (viewModel.isEditMode) "EDIT TRADE" else "LOG NEW TRADE",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp
                     ) 
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TradingTextPrimary)
+                        Icon(Icons.Default.Close, contentDescription = "Close")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = TradingBlack,
-                    titleContentColor = TradingTextPrimary
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(TradingBlack)
-                .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            // Pair & Type Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ModernTextField(
-                    value = state.pair,
-                    onValueChange = viewModel::updatePair,
-                    label = "INSTRUMENT",
-                    placeholder = "e.g. EURUSD",
-                    modifier = Modifier.weight(1f)
-                )
-                
-                TradeTypeSelector(
-                    selectedType = state.type,
-                    onTypeChange = viewModel::updateType
-                )
-            }
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Subtle Background Glow
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(TradingBlue.copy(alpha = 0.05f), Color.Transparent)
+                        )
+                    )
+            )
 
-            // Prices Section
-            Card(
-                colors = CardDefaults.cardColors(containerColor = TradingDarkGrey),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, TradingLightGrey)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Asset & Type Card
+                SectionCard(title = "TRADE IDENTITY", icon = Icons.Default.Category) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.Bottom
+                    ) {
                         ModernTextField(
-                            value = state.entryPrice,
-                            onValueChange = viewModel::updateEntryPrice,
-                            label = "ENTRY",
+                            value = state.pair,
+                            onValueChange = viewModel::updatePair,
+                            label = "ASSET PAIR",
+                            placeholder = "BTCUSD",
                             modifier = Modifier.weight(1f)
                         )
-                        ModernTextField(
-                            value = state.exitPrice,
-                            onValueChange = viewModel::updateExitPrice,
-                            label = "EXIT",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        ModernTextField(
-                            value = state.stopLoss,
-                            onValueChange = viewModel::updateStopLoss,
-                            label = "SL",
-                            modifier = Modifier.weight(1f)
-                        )
-                        ModernTextField(
-                            value = state.takeProfit,
-                            onValueChange = viewModel::updateTakeProfit,
-                            label = "TP",
-                            modifier = Modifier.weight(1f)
+                        
+                        TradeTypeSelector(
+                            selectedType = state.type,
+                            onTypeChange = viewModel::updateType
                         )
                     }
                 }
-            }
 
-            // Result Selection
-            Text("OUTCOME", style = MaterialTheme.typography.labelSmall, color = TradingTextSecondary, fontWeight = FontWeight.Bold)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutcomeChip(TradeResult.WIN, "WIN", TradingGreen, state.result == TradeResult.WIN) { viewModel.updateResult(it) }
-                OutcomeChip(TradeResult.LOSS, "LOSS", TradingRed, state.result == TradeResult.LOSS) { viewModel.updateResult(it) }
-                OutcomeChip(TradeResult.BREAK_EVEN, "B/E", TradingTextSecondary, state.result == TradeResult.BREAK_EVEN) { viewModel.updateResult(it) }
-            }
-
-            // Reason & Notes
-            ModernTextField(
-                value = state.reason,
-                onValueChange = viewModel::updateReason,
-                label = "CONFLUENCE / REASONING",
-                minLines = 3
-            )
-
-            // Image Section
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("SCREENSHOT", style = MaterialTheme.typography.labelSmall, color = TradingTextSecondary, fontWeight = FontWeight.Bold)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    ImagePickerButton(Icons.Default.CameraAlt, "Camera") { cameraLauncher.launch(null) }
-                    ImagePickerButton(Icons.Default.Image, "Gallery") { galleryLauncher.launch("image/*") }
-                    
-                    if (state.imagePath != null) {
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(TradingDarkGrey)
-                        ) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current).data(state.imagePath).build(),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                // Entry & Exit Card
+                SectionCard(title = "EXECUTION DETAILS", icon = Icons.Default.PrecisionManufacturing) {
+                    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            ModernTextField(
+                                value = state.entryPrice,
+                                onValueChange = viewModel::updateEntryPrice,
+                                label = "ENTRY PRICE",
+                                modifier = Modifier.weight(1f),
+                                leadingIcon = Icons.AutoMirrored.Filled.Login
                             )
-                            IconButton(
-                                onClick = viewModel::removeImage,
-                                modifier = Modifier.size(20.dp).align(Alignment.TopEnd).offset(x = 4.dp, y = (-4).dp).background(TradingRed, CircleShape)
+                            ModernTextField(
+                                value = state.exitPrice,
+                                onValueChange = viewModel::updateExitPrice,
+                                label = "EXIT PRICE",
+                                modifier = Modifier.weight(1f),
+                                leadingIcon = Icons.AutoMirrored.Filled.Logout
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            ModernTextField(
+                                value = state.stopLoss,
+                                onValueChange = viewModel::updateStopLoss,
+                                label = "STOP LOSS",
+                                modifier = Modifier.weight(1f),
+                                color = TradingRed
+                            )
+                            ModernTextField(
+                                value = state.takeProfit,
+                                onValueChange = viewModel::updateTakeProfit,
+                                label = "TAKE PROFIT",
+                                modifier = Modifier.weight(1f),
+                                color = TradingGreen
+                            )
+                        }
+                    }
+                }
+
+                // Outcome & Strategy
+                SectionCard(title = "OUTCOME & STRATEGY", icon = Icons.Default.AutoFixHigh) {
+                    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            OutcomeChip(TradeResult.WIN, "WIN", TradingGreen, state.result == TradeResult.WIN, Modifier.weight(1f)) { viewModel.updateResult(it) }
+                            OutcomeChip(TradeResult.LOSS, "LOSS", TradingRed, state.result == TradeResult.LOSS, Modifier.weight(1f)) { viewModel.updateResult(it) }
+                            OutcomeChip(TradeResult.BREAK_EVEN, "B/E", TradingOrange, state.result == TradeResult.BREAK_EVEN, Modifier.weight(1f)) { viewModel.updateResult(it) }
+                        }
+                        ModernTextField(
+                            value = state.strategy,
+                            onValueChange = viewModel::updateStrategy,
+                            label = "STRATEGY USED",
+                            placeholder = "e.g. SMC, Trendline Breakout"
+                        )
+                    }
+                }
+
+                // Evidence (Screenshot)
+                SectionCard(title = "VISUAL EVIDENCE", icon = Icons.Default.Collections) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ImagePickerButton(Icons.Default.AddAPhoto, "Camera") { cameraLauncher.launch(null) }
+                        ImagePickerButton(Icons.Default.PhotoLibrary, "Gallery") { galleryLauncher.launch("image/*") }
+                        
+                        if (state.imagePath != null) {
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .shadow(4.dp)
                             ) {
-                                Icon(Icons.Default.Close, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current).data(state.imagePath).build(),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Surface(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(20.dp)
+                                        .clickable { viewModel.removeImage() },
+                                    color = TradingRed,
+                                    shape = CircleShape
+                                ) {
+                                    Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.padding(4.dp))
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            Spacer(Modifier.height(12.dp))
-
-            Button(
-                onClick = { viewModel.saveTrade(onSaved = onSaveComplete) },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = TradingBlue, contentColor = TradingBlack),
-                enabled = !state.isSaving
-            ) {
-                if (state.isSaving) {
-                    CircularProgressIndicator(Modifier.size(24.dp), color = TradingBlack)
-                } else {
-                    Text("LOG TRADE", fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                Button(
+                    onClick = { viewModel.saveTrade(onSaved = onSaveComplete) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .shadow(16.dp, RoundedCornerShape(20.dp), spotColor = TradingBlue),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = TradingBlue,
+                        contentColor = Color.White
+                    ),
+                    enabled = !state.isSaving
+                ) {
+                    if (state.isSaving) {
+                        CircularProgressIndicator(Modifier.size(24.dp), color = Color.White)
+                    } else {
+                        Text("SAVE TRADE ENTRY", fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                    }
                 }
+                
+                Spacer(Modifier.height(40.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun SectionCard(title: String, icon: ImageVector, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = TradingBlue, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(
+                title, 
+                style = MaterialTheme.typography.labelMedium, 
+                color = TradingBlue, 
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp
+            )
+        }
+        Surface(
+            color = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(24.dp),
+            shadowElevation = 2.dp,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(modifier = Modifier.padding(20.dp)) {
+                content()
             }
         }
     }
@@ -219,42 +279,53 @@ fun ModernTextField(
     label: String,
     modifier: Modifier = Modifier,
     placeholder: String = "",
-    minLines: Int = 1
+    leadingIcon: ImageVector? = null,
+    color: Color = TradingBlue
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = TradingTextSecondary, fontWeight = FontWeight.Bold)
-        TextField(
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            label, 
+            style = MaterialTheme.typography.labelSmall, 
+            color = TradingTextSecondary, 
+            fontWeight = FontWeight.Bold
+        )
+        OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             placeholder = { Text(placeholder, color = TradingTextSecondary.copy(alpha = 0.5f)) },
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = TradingDarkGrey,
-                unfocusedContainerColor = TradingDarkGrey,
-                focusedTextColor = TradingTextPrimary,
-                unfocusedTextColor = TradingTextPrimary,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            leadingIcon = leadingIcon?.let { { Icon(it, null, tint = color.copy(alpha = 0.6f)) } },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = color,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                focusedContainerColor = color.copy(alpha = 0.02f),
+                unfocusedContainerColor = Color.Transparent
             ),
-            minLines = minLines
+            singleLine = true
         )
     }
 }
 
 @Composable
-fun OutcomeChip(result: TradeResult, label: String, color: Color, isSelected: Boolean, onClick: (TradeResult) -> Unit) {
+fun OutcomeChip(result: TradeResult, label: String, color: Color, isSelected: Boolean, modifier: Modifier = Modifier, onClick: (TradeResult) -> Unit) {
+    val alpha by animateFloatAsState(if (isSelected) 1f else 0.1f)
+    val textColor = if (isSelected) Color.White else color
+
     Surface(
-        modifier = Modifier.height(48.dp).padding(vertical = 4.dp).clickable { onClick(result) },
-        color = if (isSelected) color else TradingDarkGrey,
-        shape = RoundedCornerShape(24.dp),
-        border = if (isSelected) null else BorderStroke(1.dp, TradingLightGrey)
+        modifier = modifier
+            .height(44.dp)
+            .clickable { onClick(result) },
+        color = color.copy(alpha = alpha),
+        shape = RoundedCornerShape(12.dp),
+        border = if (isSelected) null else BorderStroke(1.dp, color.copy(alpha = 0.3f))
     ) {
-        Box(modifier = Modifier.padding(horizontal = 24.dp), contentAlignment = Alignment.Center) {
+        Box(contentAlignment = Alignment.Center) {
             Text(
                 label,
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = if (isSelected) TradingBlack else TradingTextPrimary
+                fontWeight = FontWeight.Black,
+                color = textColor
             )
         }
     }
@@ -263,7 +334,11 @@ fun OutcomeChip(result: TradeResult, label: String, color: Color, isSelected: Bo
 @Composable
 fun TradeTypeSelector(selectedType: TradeType, onTypeChange: (TradeType) -> Unit) {
     Row(
-        modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(TradingDarkGrey).padding(4.dp)
+        modifier = Modifier
+            .height(56.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(4.dp)
     ) {
         TypeButton(TradeType.BUY, "BUY", TradingGreen, selectedType == TradeType.BUY) { onTypeChange(it) }
         TypeButton(TradeType.SELL, "SELL", TradingRed, selectedType == TradeType.SELL) { onTypeChange(it) }
@@ -272,23 +347,38 @@ fun TradeTypeSelector(selectedType: TradeType, onTypeChange: (TradeType) -> Unit
 
 @Composable
 fun TypeButton(type: TradeType, label: String, color: Color, isSelected: Boolean, onClick: (TradeType) -> Unit) {
+    val bgAlpha by animateFloatAsState(if (isSelected) 1f else 0f)
+    
     Surface(
-        modifier = Modifier.height(40.dp).clickable { onClick(type) },
-        color = if (isSelected) color else Color.Transparent,
-        shape = RoundedCornerShape(8.dp)
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(80.dp)
+            .clickable { onClick(type) },
+        color = color.copy(alpha = bgAlpha),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Box(modifier = Modifier.padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
-            Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = if (isSelected) TradingBlack else color)
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                label, 
+                style = MaterialTheme.typography.labelMedium, 
+                fontWeight = FontWeight.Black, 
+                color = if (isSelected) Color.White else color
+            )
         }
     }
 }
 
 @Composable
 fun ImagePickerButton(icon: ImageVector, desc: String, onClick: () -> Unit) {
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier.size(56.dp).background(TradingDarkGrey, RoundedCornerShape(12.dp)).border(BorderStroke(1.dp, TradingLightGrey), RoundedCornerShape(12.dp))
+    Surface(
+        modifier = Modifier
+            .size(56.dp)
+            .clickable { onClick() },
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Icon(icon, contentDescription = desc, tint = TradingTextSecondary)
+        Box(contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = desc, tint = TradingBlue)
+        }
     }
 }

@@ -71,6 +71,21 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun updateName(newName: String) {
+        val user = auth.currentUser ?: return
+        viewModelScope.launch {
+            try {
+                val profileUpdates = UserProfileChangeRequest.Builder()
+                    .setDisplayName(newName)
+                    .build()
+                user.updateProfile(profileUpdates).await()
+                _currentUser.value = auth.currentUser // Refresh
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+
     fun logout(onLogout: () -> Unit) {
         auth.signOut()
         _currentUser.value = null

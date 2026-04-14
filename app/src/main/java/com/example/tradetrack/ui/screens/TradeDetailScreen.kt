@@ -48,13 +48,13 @@ fun TradeDetailScreen(
         }
 
         Scaffold(
-            containerColor = TradingBlack,
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(
-                    title = { Text("TRADE DETAILS", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, letterSpacing = 2.sp) },
+                    title = { Text("TRADE DETAILS", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, letterSpacing = 1.sp) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TradingTextPrimary)
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     },
                     actions = {
@@ -62,7 +62,10 @@ fun TradeDetailScreen(
                             Icon(Icons.Default.Edit, contentDescription = "Edit", tint = TradingBlue)
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = TradingBlack, titleContentColor = TradingTextPrimary)
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
             }
         ) { padding ->
@@ -70,7 +73,7 @@ fun TradeDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .background(TradingBlack)
+                    .background(MaterialTheme.colorScheme.background)
                     .verticalScroll(rememberScrollState())
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
@@ -165,7 +168,7 @@ fun HeaderSection(trade: Trade, resultColor: Color) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
-            Text(trade.pair.uppercase(), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold, color = Color.White)
+            Text(trade.pair.uppercase(), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val typeColor = if (trade.type == TradeType.BUY) TradingGreen else TradingRed
                 Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(typeColor))
@@ -196,16 +199,16 @@ fun HeaderSection(trade: Trade, resultColor: Color) {
 fun StatCard(label: String, value: String, icon: ImageVector, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = TradingDarkGrey),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, TradingLightGrey)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = null, tint = TradingBlue, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(label, style = MaterialTheme.typography.labelSmall, color = TradingTextSecondary)
-                Text(value, style = MaterialTheme.typography.bodyLarge, color = Color.White, fontWeight = FontWeight.Bold)
+                Text(value, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -216,7 +219,7 @@ fun InfoGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(title, style = MaterialTheme.typography.labelSmall, color = TradingBlue, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
         Column(
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(TradingDarkGrey).padding(16.dp),
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             content()
@@ -235,7 +238,7 @@ fun PriceRow(label: String, value: String, color: Color) {
 @Composable
 fun PriceBox(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.clip(RoundedCornerShape(12.dp)).background(TradingBlack.copy(alpha = 0.3f)).padding(12.dp)
+        modifier = modifier.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.background).padding(12.dp)
     ) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = TradingTextSecondary)
         Text(value, style = MaterialTheme.typography.titleMedium, color = color, fontWeight = FontWeight.Bold)
@@ -247,6 +250,6 @@ fun AnalysisText(label: String, text: String) {
     Column {
         Text(label, style = MaterialTheme.typography.labelSmall, color = TradingPurple, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(4.dp))
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = TradingTextPrimary)
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
     }
 }

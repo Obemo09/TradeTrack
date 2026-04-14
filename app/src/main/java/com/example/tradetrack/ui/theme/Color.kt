@@ -2,29 +2,33 @@ package com.example.tradetrack.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Modern Trading Palette
-val TradingBlack = Color(0xFF0E1116)
-val TradingDarkGrey = Color(0xFF161B22)
-val TradingLightGrey = Color(0xFF21262D)
-val TradingTextPrimary = Color(0xFFC9D1D9)
-val TradingTextSecondary = Color(0xFF8B949E)
+// --- Dynamic & Vibrant Trading Palette ---
 
-val TradingGreen = Color(0xFF238636)
-val TradingGreenLight = Color(0xFF2EA043)
-val TradingRed = Color(0xFFDA3633)
-val TradingRedLight = Color(0xFFF85149)
-val TradingBlue = Color(0xFF58A6FF)
-val TradingOrange = Color(0xFFD29922) // Added for caution/pending
-val TradingPurple = Color(0xFF8957E5) // Added for strategy/analysis accent
+// Backgrounds & Surfaces
+val TradingBlack = Color(0xFF0B0E14)
+val TradingDarkGrey = Color(0xFF141922)
+val TradingLightGrey = Color(0xFF1D2430)
 
-val SuccessGreen = Color(0xFF4CAF50)
-val ErrorRed = Color(0xFFE53935)
-val NeutralBlue = Color(0xFF2196F3)
+// Brand Colors
+val TradingBlue = Color(0xFF007BFF)
+val TradingBlueLight = Color(0xFF4CAFFF)
+val TradingCyan = Color(0xFF00D2FF)
 
-// Material 3 Dark Colors
-val DarkPrimary = Color(0xFF58A6FF)
-val DarkOnPrimary = Color(0xFF0E1116)
-val DarkSecondary = Color(0xFF21262D)
-val DarkBackground = Color(0xFF0D1117)
-val DarkSurface = Color(0xFF161B22)
-val DarkOnSurface = Color(0xFFC9D1D9)
+// Status Colors (Vivid)
+val TradingGreen = Color(0xFF00C853)
+val TradingGreenLight = Color(0xFF69F0AE)
+val TradingRed = Color(0xFFFF1744)
+val TradingRedLight = Color(0xFFFF5252)
+val TradingOrange = Color(0xFFFF9100)
+val TradingPurple = Color(0xFF6200EA)
+
+// Text Colors
+val TradingTextPrimary = Color(0xFFF8F9FA)
+val TradingTextSecondary = Color(0xFF94A3B8)
+
+// Gradients
+val BlueGradient = listOf(TradingBlue, TradingCyan)
+val GreenGradient = listOf(TradingGreen, TradingGreenLight)
+val RedGradient = listOf(TradingRed, TradingRedLight)
+val DarkGradient = listOf(TradingBlack, TradingDarkGrey)
+val CardGradient = listOf(TradingDarkGrey, TradingLightGrey)
