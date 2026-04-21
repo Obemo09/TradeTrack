@@ -1,5 +1,7 @@
 package com.example.tradetrack.ui.components
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -16,13 +18,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tradetrack.R
 import com.example.tradetrack.data.Trade
 import com.example.tradetrack.data.TradeResult
 import com.example.tradetrack.data.TradeType
 import com.example.tradetrack.ui.theme.*
+import com.example.tradetrack.ui.animations.clickableSlideAnimation
+import com.example.tradetrack.ui.animations.buttonScaleFadeAnimation
+import com.example.tradetrack.util.ForexUtils
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,26 +37,29 @@ import java.util.*
 @Composable
 fun ModernTradeItem(trade: Trade, onClick: () -> Unit, onDelete: () -> Unit) {
     var showDelete by remember { mutableStateOf(false) }
+    val isDark = isSystemInDarkTheme()
 
     val resultColor = when (trade.result) {
-        TradeResult.WIN -> TradingGreen
-        TradeResult.LOSS -> TradingRed
-        TradeResult.BREAK_EVEN -> TradingOrange
-        TradeResult.OPEN -> TradingBlue
+        TradeResult.WIN -> ProfitGreen
+        TradeResult.LOSS -> LossRed
+        TradeResult.BREAK_EVEN -> WarningOrange
+        TradeResult.OPEN -> PrimaryBlue
     }
 
-    val typeColor = if (trade.type == TradeType.BUY) TradingGreen else TradingRed
+    val typeColor = if (trade.type == TradeType.BUY) ProfitGreen else LossRed
     val typeLabel = if (trade.type == TradeType.BUY) "LONG" else "SHORT"
+    val profit = ForexUtils.calculateProfit(trade)
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 6.dp)
             .shadow(
-                elevation = 8.dp,
+                elevation = 12.dp,
                 shape = RoundedCornerShape(24.dp),
-                spotColor = resultColor.copy(alpha = 0.2f)
+                spotColor = if (isDark) resultColor.copy(alpha = 0.3f) else Color.Black.copy(alpha = 0.1f)
             )
+            .clickableSlideAnimation()
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = { showDelete = true }
@@ -63,16 +73,16 @@ fun ModernTradeItem(trade: Trade, onClick: () -> Unit, onDelete: () -> Unit) {
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Pair & Type Icon with Gradient Background
+            // Pair & Type Icon
             Box(
                 modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(18.dp))
                     .background(
                         Brush.linearGradient(
                             colors = listOf(
-                                typeColor.copy(alpha = 0.2f),
-                                typeColor.copy(alpha = 0.05f)
+                                typeColor.copy(alpha = 0.15f),
+                                typeColor.copy(alpha = 0.02f)
                             )
                         )
                     ),
@@ -93,7 +103,7 @@ fun ModernTradeItem(trade: Trade, onClick: () -> Unit, onDelete: () -> Unit) {
                     trade.pair.uppercase(),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Black,
                     letterSpacing = 0.5.sp
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -106,61 +116,67 @@ fun ModernTradeItem(trade: Trade, onClick: () -> Unit, onDelete: () -> Unit) {
                     Text(
                         " • ${trade.date.substringBefore("T")}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TradingTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
             Column(horizontalAlignment = Alignment.End) {
-                val resultText = when (trade.result) {
-                    TradeResult.WIN -> "WIN"
-                    TradeResult.LOSS -> "LOSS"
-                    TradeResult.BREAK_EVEN -> "B/E"
-                    TradeResult.OPEN -> "OPEN"
-                }
-                
-                Surface(
-                    color = resultColor.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
+                if (trade.result != TradeResult.OPEN) {
                     Text(
-                        resultText,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = resultColor,
+                        text = if (profit >= 0) "+$${String.format(Locale.US, "%.2f", profit)}" 
+                               else "-$${String.format(Locale.US, "%.2f", -profit)}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (profit >= 0) ProfitGreen else LossRed,
                         fontWeight = FontWeight.Black
                     )
+                } else {
+                    Surface(
+                        color = PrimaryBlue.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            "OPEN",
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PrimaryBlue,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
                 }
                 
                 Spacer(Modifier.height(4.dp))
                 
                 Text(
                     "@${trade.entryPrice}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TradingTextSecondary,
+                    fontWeight = FontWeight.Medium
                 )
             }
 
             if (showDelete) {
                 AlertDialog(
                     onDismissRequest = { showDelete = false },
-                    title = { Text("Delete Entry?", fontWeight = FontWeight.Bold) },
+                    title = { Text("Delete Entry?", fontWeight = FontWeight.Black) },
                     text = { Text("Are you sure you want to remove this trade from your journal?") },
                     confirmButton = {
-                        TextButton(onClick = { onDelete(); showDelete = false }, colors = ButtonDefaults.textButtonColors(contentColor = TradingRed)) {
+                        Button(
+                            onClick = { onDelete(); showDelete = false },
+                            colors = ButtonDefaults.buttonColors(containerColor = LossRed),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.buttonScaleFadeAnimation()
+                        ) {
                             Text("Remove", fontWeight = FontWeight.Bold)
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showDelete = false }) {
-                            Text("Cancel", color = Color.Gray)
+                            Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     },
                     containerColor = MaterialTheme.colorScheme.surface,
-                    textContentColor = MaterialTheme.colorScheme.onSurface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    shape = RoundedCornerShape(24.dp)
+                    shape = RoundedCornerShape(28.dp)
                 )
             }
         }
@@ -173,32 +189,32 @@ fun EmptyState() {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(140.dp)
                     .background(
-                        Brush.radialGradient(listOf(TradingBlue.copy(alpha = 0.15f), Color.Transparent)),
+                        Brush.radialGradient(listOf(TradingBlue.copy(alpha = 0.1f), Color.Transparent)),
                         CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Default.AddChart,
+                Image(
+                    painter = painterResource(id = R.mipmap.ic_launcher_foreground),
                     contentDescription = null,
-                    modifier = Modifier.size(56.dp),
-                    tint = TradingBlue
+                    modifier = Modifier.size(100.dp),
+                    alpha = 0.6f
                 )
             }
             Spacer(Modifier.height(24.dp))
             Text(
-                "READY TO START?", 
-                style = MaterialTheme.typography.titleMedium, 
+                "NO TRADES YET", 
+                style = MaterialTheme.typography.titleLarge, 
                 color = MaterialTheme.colorScheme.onSurface, 
                 fontWeight = FontWeight.Black, 
                 letterSpacing = 2.sp
             )
             Text(
-                "Your journal is empty. Log your first trade.", 
-                color = TradingTextSecondary, 
-                style = MaterialTheme.typography.bodySmall, 
+                "Start logging your journey today.", 
+                color = MaterialTheme.colorScheme.onSurfaceVariant, 
+                style = MaterialTheme.typography.bodyMedium, 
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
@@ -209,26 +225,21 @@ fun EmptyState() {
 fun DateHeader(date: String) {
     val formattedDate = try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        val outputFormat = SimpleDateFormat("EEEE, MMMM d", Locale.US)
+        val outputFormat = SimpleDateFormat("EEEE, MMM d", Locale.US)
         val parsedDate = inputFormat.parse(date)
         outputFormat.format(parsedDate ?: Date())
     } catch (e: Exception) {
         date
     }
 
-    Surface(
+    Text(
+        text = formattedDate.uppercase(),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        color = Color.Transparent
-    ) {
-        Text(
-            text = formattedDate.uppercase(),
-            style = MaterialTheme.typography.labelLarge,
-            color = TradingBlue,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 1.5.sp,
-            modifier = Modifier.padding(horizontal = 4.dp)
-        )
-    }
+            .padding(vertical = 16.dp, horizontal = 4.dp),
+        style = MaterialTheme.typography.labelLarge,
+        color = PrimaryBlue,
+        fontWeight = FontWeight.Black,
+        letterSpacing = 2.sp
+    )
 }

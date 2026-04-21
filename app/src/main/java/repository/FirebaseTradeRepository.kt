@@ -25,7 +25,9 @@ class FirebaseTradeRepository {
         val snapshot = tradesCollection
             .whereEqualTo("userId", uid)
             .get().await()
-        return snapshot.documents.mapNotNull { it.toObject(Trade::class.java) }
+        return snapshot.documents.mapNotNull { doc ->
+            doc.toObject(Trade::class.java)?.copy(id = doc.id)
+        }
     }
 
     suspend fun deleteTradeById(id: String) {

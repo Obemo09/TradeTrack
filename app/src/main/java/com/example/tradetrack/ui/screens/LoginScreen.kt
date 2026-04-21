@@ -1,7 +1,9 @@
 package com.example.tradetrack.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -14,19 +16,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tradetrack.R
 import com.example.tradetrack.ui.theme.TradingBlack
 import com.example.tradetrack.ui.theme.TradingBlue
 import com.example.tradetrack.ui.theme.TradingDarkGrey
 import com.example.tradetrack.ui.theme.TradingTextPrimary
 import com.example.tradetrack.ui.theme.TradingTextSecondary
 import com.example.tradetrack.viewmodel.AuthViewModel
+import com.example.tradetrack.ui.animations.buttonScaleFadeAnimation
 
 @Composable
 fun LoginScreen(
@@ -50,6 +56,23 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // App Logo
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .clip(CircleShape)
+                .background(TradingBlue.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                contentDescription = "TradeTrack Logo",
+                modifier = Modifier.size(80.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         Text(
             text = "TRADETRACK",
             style = MaterialTheme.typography.headlineLarge,
@@ -159,7 +182,8 @@ fun LoginScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
+                .height(56.dp)
+                .buttonScaleFadeAnimation(),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = TradingBlue, contentColor = TradingBlack),
             enabled = !isLoading

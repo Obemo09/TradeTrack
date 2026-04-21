@@ -2,7 +2,6 @@ package com.example.tradetrack.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.tradetrack.data.*
 import com.example.tradetrack.repository.FirebaseTradeRepository
@@ -38,16 +37,14 @@ data class AddEditState(
 
 class AddEditTradeViewModel(
     private val application: Application,
-    savedStateHandle: SavedStateHandle
+    private val tradeId: String?
 ) : AndroidViewModel(application) {
 
     // Repositories
     private val repository = TradeRepository(application)
+    private val statsRepository = UserStatsRepository(application)
     private val firebaseRepository = FirebaseTradeRepository()
     private val auth = FirebaseAuth.getInstance()
-
-    // Existing trade ID if editing
-    private val tradeId: String? = savedStateHandle["tradeId"]
 
     // --- StateFlow for UI ---
     private val _state = MutableStateFlow(AddEditState())
@@ -164,7 +161,13 @@ class AddEditTradeViewModel(
             )
 
             // 1️⃣ Save to Room
-            if (tradeId != null) repository.update(trade) else repository.insert(trade)
+            if (tradeId != null) {
+                repository.update(trade)
+            } else {
+                repository.insert(trade)
+                // Gamification: Process XP and achievements only for new trades
+                statsRepository.processTradeLogged(currentUserId, trade)
+            }
 
             // 2️⃣ Save to Firestore
             try {

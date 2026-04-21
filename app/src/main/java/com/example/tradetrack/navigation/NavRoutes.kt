@@ -4,15 +4,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector? = null) {
+    object Onboarding : Screen("onboarding", "Welcome")
     object Login : Screen("login", "Login")
     object Home : Screen("home", "Home", Icons.Default.Home)
+    object Journal : Screen("journal", "Journal", Icons.Default.History)
     object Analytics : Screen("analytics", "Analytics", Icons.Default.Analytics)
-    object History : Screen("history", "History", Icons.Default.History)
-    object Settings : Screen("settings", "Settings", Icons.Default.Settings)
+    object Profile : Screen("profile", "Profile", Icons.Default.Person)
+    object Achievements : Screen("achievements", "Achievements")
     
     object AddTrade : Screen("add_trade", "Add Trade")
     object EditTrade : Screen("edit_trade/{tradeId}", "Edit Trade") {
@@ -25,7 +27,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
 
 val BottomNavItems = listOf(
     Screen.Home,
+    Screen.Journal,
     Screen.Analytics,
-    Screen.History,
-    Screen.Settings
+    Screen.Profile
 )

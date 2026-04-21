@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 class TradeListViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = TradeRepository(application)
+    private val statsRepository = UserStatsRepository(application)
     private val firebaseRepository = FirebaseTradeRepository()
     private val auth = FirebaseAuth.getInstance()
 
@@ -32,6 +33,16 @@ class TradeListViewModel(application: Application) : AndroidViewModel(applicatio
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val userStats: StateFlow<UserStats?> = userId.flatMapLatest { id ->
+        if (id == null) flowOf(null)
+        else statsRepository.getUserStats(id)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
     )
 
     init {

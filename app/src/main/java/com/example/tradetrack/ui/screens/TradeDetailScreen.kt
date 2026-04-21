@@ -1,6 +1,7 @@
 package com.example.tradetrack.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,15 +20,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.tradetrack.R
 import com.example.tradetrack.data.Trade
 import com.example.tradetrack.data.TradeResult
 import com.example.tradetrack.data.TradeType
 import com.example.tradetrack.ui.theme.*
+import com.example.tradetrack.ui.animations.buttonScaleFadeAnimation
+import com.example.tradetrack.util.ForexUtils
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,15 +49,33 @@ fun TradeDetailScreen(
         val resultColor = when (trade.result) {
             TradeResult.WIN -> TradingGreen
             TradeResult.LOSS -> TradingRed
-            TradeResult.BREAK_EVEN -> TradingOrange
+            TradeResult.BREAK_EVEN -> WarningOrange
             TradeResult.OPEN -> TradingBlue
         }
+        
+        val profit = ForexUtils.calculateProfit(trade)
+        val pips = ForexUtils.calculatePips(trade)
 
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(
-                    title = { Text("TRADE DETAILS", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, letterSpacing = 1.sp) },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                                contentDescription = null,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "TRADE DETAILS",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp
+                            )
+                        }
+                    },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -81,12 +105,45 @@ fun TradeDetailScreen(
                 // Header Section: Pair & Result
                 HeaderSection(trade, resultColor)
 
+                // P&L Highlights
+                Surface(
+                    color = resultColor.copy(alpha = 0.05f),
+                    shape = RoundedCornerShape(24.dp),
+                    border = BorderStroke(1.dp, resultColor.copy(alpha = 0.1f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("NET PROFIT", style = MaterialTheme.typography.labelSmall, color = TradingTextSecondary)
+                            Text(
+                                if (profit >= 0) "+$${String.format(Locale.US, "%.2f", profit)}" else "-$${String.format(Locale.US, "%.2f", -profit)}",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = resultColor,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("TOTAL PIPS", style = MaterialTheme.typography.labelSmall, color = TradingTextSecondary)
+                            Text(
+                                String.format(Locale.US, "%.1f PIPS", pips),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = resultColor,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
                 // Key Stats Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    StatCard(label = "LOT SIZE", value = trade.lotSize?.toString() ?: "N/A", icon = Icons.Default.Layers, modifier = Modifier.weight(1f))
+                    StatCard(label = "LOT SIZE", value = String.format(Locale.US, "%.2f", trade.lotSize ?: 0.0), icon = Icons.Default.Layers, modifier = Modifier.weight(1f))
                     StatCard(label = "STRATEGY", value = trade.strategy ?: "Unset", icon = Icons.Default.EmojiObjects, modifier = Modifier.weight(1f))
                 }
 
@@ -145,7 +202,10 @@ fun TradeDetailScreen(
                         onDeleted()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = TradingRed.copy(alpha = 0.1f), contentColor = TradingRed),
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .buttonScaleFadeAnimation(),
                     shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, TradingRed.copy(alpha = 0.3f))
                 ) {

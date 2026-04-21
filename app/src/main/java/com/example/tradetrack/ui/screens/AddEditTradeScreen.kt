@@ -6,8 +6,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -28,16 +30,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.tradetrack.R
 import com.example.tradetrack.data.TradeResult
 import com.example.tradetrack.data.TradeType
 import com.example.tradetrack.ui.theme.*
 import com.example.tradetrack.util.ImageHelper
 import com.example.tradetrack.viewmodel.AddEditTradeViewModel
+import com.example.tradetrack.ui.animations.buttonScaleFadeAnimation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,12 +66,20 @@ fun AddEditTradeScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
-                    Text(
-                        if (viewModel.isEditMode) "EDIT TRADE" else "LOG NEW TRADE",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
-                    ) 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            if (viewModel.isEditMode) "EDIT TRADE" else "LOG NEW TRADE",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -122,10 +135,18 @@ fun AddEditTradeScreen(
                     }
                 }
 
-                // Entry & Exit Card
+                // Execution Details Card (Lot size added)
                 SectionCard(title = "EXECUTION DETAILS", icon = Icons.Default.PrecisionManufacturing) {
                     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            ModernTextField(
+                                value = state.lotSize,
+                                onValueChange = viewModel::updateLotSize,
+                                label = "LOT SIZE",
+                                placeholder = "0.01",
+                                modifier = Modifier.weight(1f),
+                                leadingIcon = Icons.Default.Straighten
+                            )
                             ModernTextField(
                                 value = state.entryPrice,
                                 onValueChange = viewModel::updateEntryPrice,
@@ -133,6 +154,8 @@ fun AddEditTradeScreen(
                                 modifier = Modifier.weight(1f),
                                 leadingIcon = Icons.AutoMirrored.Filled.Login
                             )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             ModernTextField(
                                 value = state.exitPrice,
                                 onValueChange = viewModel::updateExitPrice,
@@ -140,8 +163,6 @@ fun AddEditTradeScreen(
                                 modifier = Modifier.weight(1f),
                                 leadingIcon = Icons.AutoMirrored.Filled.Logout
                             )
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             ModernTextField(
                                 value = state.stopLoss,
                                 onValueChange = viewModel::updateStopLoss,
@@ -149,14 +170,14 @@ fun AddEditTradeScreen(
                                 modifier = Modifier.weight(1f),
                                 color = TradingRed
                             )
-                            ModernTextField(
-                                value = state.takeProfit,
-                                onValueChange = viewModel::updateTakeProfit,
-                                label = "TAKE PROFIT",
-                                modifier = Modifier.weight(1f),
-                                color = TradingGreen
-                            )
                         }
+                        ModernTextField(
+                            value = state.takeProfit,
+                            onValueChange = viewModel::updateTakeProfit,
+                            label = "TAKE PROFIT",
+                            modifier = Modifier.fillMaxWidth(),
+                            color = TradingGreen
+                        )
                     }
                 }
 
@@ -224,7 +245,8 @@ fun AddEditTradeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp)
-                        .shadow(16.dp, RoundedCornerShape(20.dp), spotColor = TradingBlue),
+                        .shadow(16.dp, RoundedCornerShape(20.dp), spotColor = TradingBlue)
+                        .buttonScaleFadeAnimation(),
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = TradingBlue,
@@ -315,7 +337,11 @@ fun OutcomeChip(result: TradeResult, label: String, color: Color, isSelected: Bo
     Surface(
         modifier = modifier
             .height(44.dp)
-            .clickable { onClick(result) },
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(),
+                onClick = { onClick(result) }
+            ),
         color = color.copy(alpha = alpha),
         shape = RoundedCornerShape(12.dp),
         border = if (isSelected) null else BorderStroke(1.dp, color.copy(alpha = 0.3f))
@@ -353,7 +379,11 @@ fun TypeButton(type: TradeType, label: String, color: Color, isSelected: Boolean
         modifier = Modifier
             .fillMaxHeight()
             .width(80.dp)
-            .clickable { onClick(type) },
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(),
+                onClick = { onClick(type) }
+            ),
         color = color.copy(alpha = bgAlpha),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -373,7 +403,11 @@ fun ImagePickerButton(icon: ImageVector, desc: String, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .size(56.dp)
-            .clickable { onClick() },
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(),
+                onClick = onClick
+            ),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         shape = RoundedCornerShape(16.dp)
     ) {

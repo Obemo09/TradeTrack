@@ -22,16 +22,16 @@ fun tradeDetailViewModelFactory(
 }
 
 /**
- * Factory to create AddEditTradeViewModel with application and SavedStateHandle
+ * Factory to create AddEditTradeViewModel with application and tradeId
  */
 fun addEditTradeViewModelFactory(
     application: Application,
-    owner: NavBackStackEntry
+    tradeId: String?
 ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(AddEditTradeViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return AddEditTradeViewModel(application, owner.savedStateHandle) as T
+            return AddEditTradeViewModel(application, tradeId) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

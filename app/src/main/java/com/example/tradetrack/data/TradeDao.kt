@@ -20,6 +20,9 @@ interface TradeDao {
     @Query("SELECT * FROM trades WHERE id = :id")
     suspend fun getTradeById(id: String): Trade?
 
+    @Query("SELECT * FROM trades WHERE id = :id")
+    fun getTradeFlow(id: String): Flow<Trade?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(trade: Trade): Long
 
