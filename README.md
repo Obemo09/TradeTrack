@@ -109,8 +109,8 @@ git push origin feature-name
 
 ## Authors
 
-- Your Name  
-- Partner Name
+- Emmanuel Obasi
+- Mokosa Andrew
 
 ## License
 
